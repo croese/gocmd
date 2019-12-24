@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 
@@ -8,6 +9,16 @@ import (
 )
 
 const version = "v1.0.0"
+
+type args struct {
+	numberNonBlank     bool
+	displayLineEnds    bool
+	numberLines        bool
+	squeezeLines       bool
+	displayTabs        bool
+	disableBuffering   bool
+	displayNonPrinting bool
+}
 
 func main() {
 	cli.VersionFlag = &cli.BoolFlag{
@@ -46,11 +57,32 @@ func main() {
 				Usage: "Display non-printing characters so they are visible.  Control characters print as '^X' for control-X; the delete character (octal 0177) prints as '^?'.  Non-ASCII characters (with the high bit set) are printed as 'M-' (for meta) followed by the character for the low 7 bits",
 			},
 		},
-		Name:    "cat",
-		Version: version,
-		Usage:   "concatenate and print files",
+		Name:        "cat",
+		Version:     version,
+		Usage:       "concatenate and print files",
+		UsageText:   "cat [-benstuv] [file ...]",
+		Description: "The cat utility reads files sequentially, writing them to the standard output.  The file operands are processed in command-line order.  If file is a single dash ('-') or absent, cat reads from the standard input.",
 		Action: func(c *cli.Context) error {
-			fmt.Println("hello world")
+			if c.NArg() == 0 {
+				handleStdin()
+			} else {
+				args := args{
+					numberNonBlank:     c.Bool("b"),
+					displayLineEnds:    c.Bool("e"),
+					numberLines:        c.Bool("n"),
+					squeezeLines:       c.Bool("s"),
+					displayTabs:        c.Bool("t"),
+					disableBuffering:   c.Bool("u"),
+					displayNonPrinting: c.Bool("v"),
+				}
+				for _, file := range c.Args().Slice() {
+					if file == "-" {
+						handleStdin(args)
+					} else {
+						handleFile(file, args)
+					}
+				}
+			}
 			return nil
 		},
 	}
@@ -59,4 +91,15 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %s\n", app.Name, err)
 	}
+}
+
+func handleStdin(a args) {
+	stdin := bufio.NewScanner(os.Stdin)
+	for stdin.Scan() {
+		fmt.Println(stdin.Text())
+	}
+}
+
+func handleFile(filename string, a args) {
+	fmt.Println("FILE:", filename)
 }
