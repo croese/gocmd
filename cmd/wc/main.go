@@ -38,7 +38,7 @@ func main() {
 				Usage: "The number of words in each input file is written to the standard output.",
 			},
 		},
-		Name:        "echo",
+		Name:        "wc",
 		Version:     version,
 		Usage:       "word, line, character, and byte count",
 		UsageText:   "wc [-clmw] [file ...]",
